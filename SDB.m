@@ -5,6 +5,7 @@
 //
 
 #import "SDB.h"
+#import "XMLElement.h"
 #import "NSData+.h"
 @class SDBOp;
 
