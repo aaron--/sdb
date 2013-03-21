@@ -7,71 +7,59 @@
 #import "SDB.h"
 #import "XMLElement.h"
 #import "NSData+.h"
-@class SDBOp;
 
-static NSString*    kSDBEndpoint = @"sdb.amazonaws.com";
-static NSString*    kSDBVersion = @"2009-04-15";
-static NSString*    kSDBSigVersion = @"2";
-static NSString*    kSDBSigMethod = @"HmacSHA1";
+static NSString*  kSDBEndpoint    = @"sdb.amazonaws.com";
+static NSString*  kSDBVersion     = @"2009-04-15";
+static NSString*  kSDBSigVersion  = @"2";
+static NSString*  kSDBSigMethod   = @"HmacSHA1";
 
-       NSString*    SDBErrorDomain = @"com.makesay.SDB.ErrorDomain";
-static NSInteger    SDBErrorStringToCode(NSString* errorString);
-static NSArray*     SDBErrorMap();
+       NSString*  SDBErrorDomain = @"com.makesay.SDB.ErrorDomain";
+static NSInteger  SDBErrorStringToCode(NSString* errorString);
+static NSArray*   SDBErrorMap();
 
 
 @interface SDB ()
-@property (readwrite) NSString*             key;
-@property (readwrite) NSString*             secret;
-@property (nonatomic, strong) NSMutableDictionary*  changes;
-- (id)initWithKey:(NSString*)key secret:(NSString*)secret;
-- (void)operationDone:(SDBOp*)operation error:(NSError*)error;
+@property (readwrite) NSString*   key;
+@property (readwrite) NSString*   secret;
 @end
 
 @interface SDBChangeSet ()
-@property (nonatomic, strong) NSMutableArray*   changes;
+@property NSMutableArray*   changes;
 @end
 
+@class SDBOp;
 typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
 
 @interface SDBOp : NSObject <NSURLConnectionDelegate>
-@property (nonatomic, strong) NSString*         action;
-@property (nonatomic, strong) NSError*          error;
-@property (nonatomic, strong) NSDictionary*     parameters;
-@property (nonatomic, weak)   SDB*              sdb;
-@property (nonatomic, strong) NSDate*           timestamp;
-@property (nonatomic, strong) NSURLConnection*  connection;
-@property (nonatomic, strong) NSURLResponse*    response;
-@property (nonatomic, strong) NSMutableData*    responseData;
-@property (nonatomic, strong) NSXMLDocument*    responseXML;
-@property (nonatomic, copy)   SDBOpDone         whenDone;
+@property        NSString*         action;
+@property        NSError*          error;
+@property        NSDictionary*     parameters;
+@property        SDB*              sdb;
+@property        NSDate*           timestamp;
+@property        NSURLConnection*  connection;
+@property        NSURLResponse*    response;
+@property        NSMutableData*    responseData;
+@property        NSXMLDocument*    responseXML;
+@property (copy) SDBOpDone         whenDone;
 + (SDBOp*)opWithSDB:(SDB*)sdb action:(NSString*)action parameters:(NSDictionary*)parameters;
-- (id)initWithSDB:(SDB*)sdb action:(NSString*)action parameters:(NSDictionary*)parameters;
 - (void)run:(SDBOpDone)block;
-- (NSString*)timestampGMTString;
-- (NSString*)generateSig:(NSDictionary*)params;
-- (NSString*)postEncodedString:(NSDictionary*)dict;
 @end
 
-@implementation SDB
 
-@synthesize key;
-@synthesize secret;
-@synthesize changes;
+@implementation SDB
 
 + (SDB*)sdbWithKey:(NSString*)key secret:(NSString*)secret
 {
   return [[SDB alloc] initWithKey:key secret:secret];
 }
 
-- (id)initWithKey:(NSString*)inKey secret:(NSString*)inSecret
+- (id)initWithKey:(NSString*)key secret:(NSString*)secret
 {
   if(!(self = [super init])) return nil;
-  self.key = inKey;
-  self.secret = inSecret;
-  self.changes = [NSMutableDictionary dictionary];
+  self.key = key;
+  self.secret = secret;
   return self;
 }
-
 
 #pragma mark -
 
@@ -82,7 +70,7 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   
   params = @{@"DomainName": domain};
   operation = [SDBOp opWithSDB:self action:@"CreateDomain" parameters:params];
-  [operation run:^(SDBOp *op, NSError *error) {
+  [operation run:^(SDBOp* op, NSError* error) {
     block(error);
   }];
 }
@@ -94,7 +82,7 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   
   params = @{@"DomainName": domain};
   operation = [SDBOp opWithSDB:self action:@"DeleteDomain" parameters:params];
-  [operation run:^(SDBOp *op, NSError *error) {
+  [operation run:^(SDBOp* op, NSError* error) {
     block(error);
   }];
 }
@@ -106,7 +94,7 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   
   params = @{@"DomainName": domain};
   operation = [SDBOp opWithSDB:self action:@"DomainMetadata" parameters:params];
-  [operation run:^(SDBOp *op, NSError *error)
+  [operation run:^(SDBOp* op, NSError* error)
   {
     NSArray*        elements;
     NSDictionary*   metadata;
@@ -340,36 +328,19 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
 
 @implementation SDBOp
 
-@synthesize action;
-@synthesize error;
-@synthesize parameters;
-@synthesize sdb;
-@synthesize timestamp;
-@synthesize connection;
-@synthesize response;
-@synthesize responseData;
-@synthesize responseXML;
-@synthesize whenDone;
-
 + (SDBOp*)opWithSDB:(SDB*)inSDB action:(NSString*)inAction parameters:(NSDictionary*)inParameters
 {
   return [[SDBOp alloc] initWithSDB:inSDB action:inAction parameters:inParameters];
 }
 
-- (id)initWithSDB:(SDB*)inSDB action:(NSString*)inAction parameters:(NSDictionary*)inParameters
+- (id)initWithSDB:(SDB*)sdb action:(NSString*)action parameters:(NSDictionary*)parameters
 {
   if(!(self = [super init])) return nil;
-  
-  self.sdb = inSDB;
-  self.action = inAction;
-  self.parameters = inParameters;
+  self.sdb = sdb;
+  self.action = action;
+  self.parameters = parameters;
   self.responseData = [NSMutableData data];
   return self;
-}
-
-- (void)dealloc
-{
-  self.sdb = nil;
 }
 
 - (void)run:(SDBOpDone)block
@@ -513,7 +484,7 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
 	[self.responseData appendData:data];
 }
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError*)inError
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError*)error
 {	
   // Wrap Up Connection
   self.connection = nil;
@@ -521,10 +492,10 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   self.responseData = nil;
   
   // Record Error
-  self.error = inError;
+  self.error = error;
   
   // Tell SDB
-  self.whenDone(self, error);
+  self.whenDone(self, self.error);
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection*)connection
@@ -585,11 +556,6 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
 @implementation SDBChangeSet
 
 @synthesize changes;
-
-+ (SDBChangeSet*)changeSet
-{
-  return [[SDBChangeSet alloc] init];
-}
 
 - (id)init
 {

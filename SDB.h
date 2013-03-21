@@ -15,11 +15,11 @@ typedef void(^SDBGetAttributesDone)(NSDictionary* attributes, NSError* error);
 typedef void(^SDBSelectDone)(NSDictionary* items, NSError* error);
 typedef void(^SDBWriteChangesDone)(NSError* error);
 
+
 @interface SDB : NSObject
 
 + (SDB*)sdbWithKey:(NSString*)key secret:(NSString*)secret;
 
-// Properties
 @property (readonly) NSString*  key;
 @property (readonly) NSString*  secret;
 
@@ -40,8 +40,6 @@ typedef void(^SDBWriteChangesDone)(NSError* error);
 @end
 
 @interface SDBChangeSet : NSObject
-
-+ (SDBChangeSet*)changeSet;
 
 - (void)setAttribute:(NSString*)attr value:(NSString*)value;
 - (void)addAttribute:(NSString*)attr value:(NSString*)value;
