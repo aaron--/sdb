@@ -16,7 +16,7 @@ PutAttributes
 Status
 ======
 
-SDB is largely untested and shouldn't be relied on for production quality projects. It requires XCode 4.2 for ARC support. It's been tested only lightly on iOS.
+SDB is largely untested and shouldn't be relied on for production quality projects. It requires XCode 4.2 for ARC support. It's been tested only lightly on iOS. ChangeSet support is untested.
 
 Todo
 ====
@@ -26,3 +26,4 @@ Todo
 - Error retry falloff logic
 - Full iOS support
 - Unit Tests
+- Test ChangeSets
