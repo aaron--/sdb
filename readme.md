@@ -13,6 +13,8 @@ GetAttributes
 Select
 PutAttributes
 
+SDB requires the XMLElement library available at https://github.com/aaron--/xmlelement
+
 Status
 ======
 
