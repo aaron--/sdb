@@ -333,7 +333,7 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   // Get Formatted Time
   self.timestamp = [NSDate dateWithTimeIntervalSinceNow:0];
   timeString = [self timestampGMTString];
-    
+  
   // Construct Parameter Disctionaries
   allParams   = [NSMutableDictionary dictionary];
   paramsBasic = @{@"Action": self.action,
@@ -428,7 +428,24 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   if(encodedString.length)
     [encodedString deleteCharactersInRange:NSMakeRange(encodedString.length - 1, 1)];
   return encodedString;
-}  
+}
+
+- (NSString*)debugDescription
+{
+  NSMutableString*  desc;
+  
+  desc = [NSString stringWithFormat:@"SDBOp:%@:", self.action];
+  for(NSString* key in self.parameters)
+    [desc appendFormat:@"%@: %@, ", key, self.parameters[key]];
+  [desc appendString:self.timestampGMTString];
+  
+  if(self.responseData) {
+    [desc appendString:@"\n"];
+    [desc appendString:[[NSString alloc] initWithData:self.responseData encoding:NSUTF8StringEncoding]];
+  }
+  
+  return desc;
+}
 
 #pragma mark - NSURLConnection Delegate
 
@@ -545,7 +562,7 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   [self.changes addObject:addChange];
 }
 
-- (NSString*)description
+- (NSString*)debugDescription
 {
   NSMutableString*  desc;
   
