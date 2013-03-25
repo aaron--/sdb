@@ -489,15 +489,14 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   //   <RequestID>07a9910f-fb82-4d4b-762c-d6bb4f6c0f5a</RequestID>
   // </Response>
   
-  errors = [self.responseRoot find:@"Errors"];
-  if(errors) {
+  if([self.responseRoot.name isEqual:@"Errors"]) {
     NSString*       errorCode;
     NSString*       errorMessage;
     NSDictionary*   errorInfo;
     NSInteger       errorInteger;
     
-    errorCode     = [errors find:@"Code"].cdata;
-    errorMessage  = [errors find:@"Message"].cdata;
+    errorCode     = [errors find:@"Error.Code"].cdata;
+    errorMessage  = [errors find:@"Error.Message"].cdata;
     errorInfo     = @{NSLocalizedDescriptionKey: errorMessage};
     errorInteger  = SDBErrorStringToCode(errorCode);
     self.error    = [NSError errorWithDomain:SDBErrorDomain code:errorInteger userInfo:errorInfo];
