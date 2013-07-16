@@ -285,6 +285,19 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   }];
 }
 
+- (void)deleteAllAttributes:(NSString*)domain item:(NSString*)item
+                   whenDone:(SDBDeleteItemDone)block
+{
+  SDBOp*          operation;
+  NSDictionary*   params;
+  
+  params = @{@"DomainName": domain, @"ItemName": item};
+  operation = [SDBOp opWithSDB:self action:@"DeleteAttributes" parameters:params];
+  [operation run:^(SDBOp *op, NSError *error) {
+    block(error);
+  }];
+}
+
 #pragma mark -
 
 - (void)operationDone:(SDBOp*)operation error:(NSError*)error
@@ -344,7 +357,7 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
                  @"Timestamp": timeString};
   [allParams addEntriesFromDictionary:paramsBasic];
   [allParams addEntriesFromDictionary:self.parameters];
-  NSLog(@"All Params: %@", allParams);
+  //NSLog(@"All Params: %@", allParams);
   
   // Add Signature to Parameters
   signature = [self generateSig:allParams];
@@ -368,7 +381,7 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   NSDateFormatter*  gmtFormat;
   
   gmtFormat = [[NSDateFormatter alloc] init];
-  [gmtFormat setDateFormat: @"yyyy-MM-dd'T'HH:mm:ss'Z'"];
+  [gmtFormat setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
   [gmtFormat setTimeZone: [NSTimeZone timeZoneForSecondsFromGMT: 0]];
   return [gmtFormat stringFromDate:self.timestamp];
 }
@@ -487,6 +500,8 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
 {
   NSError*      parseError;
   XMLElement*   errors;
+
+  //NSLog(@"SDB Response: %@", [NSString stringWithData:self.responseData encoding:NSUTF8StringEncoding]);
   
   // Create responseRoot
   self.responseRoot = [XMLElement rootWithData:self.responseData error:&parseError];
@@ -506,7 +521,7 @@ typedef void(^SDBOpDone)(SDBOp* op, NSError* error);
   //   <RequestID>07a9910f-fb82-4d4b-762c-d6bb4f6c0f5a</RequestID>
   // </Response>
   
-  if([self.responseRoot.name isEqual:@"Errors"]) {
+  if((errors = [self.responseRoot find:@"Errors"])) {
     NSString*       errorCode;
     NSString*       errorMessage;
     NSDictionary*   errorInfo;

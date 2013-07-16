@@ -14,6 +14,7 @@ typedef void(^SDBListDomainsDone)(NSArray* domains, NSError* error);
 typedef void(^SDBGetAttributesDone)(NSDictionary* attributes, NSError* error);
 typedef void(^SDBSelectDone)(NSDictionary* items, NSError* error);
 typedef void(^SDBWriteChangesDone)(NSError* error);
+typedef void(^SDBDeleteItemDone)(NSError* error);
 
 
 @interface SDB : NSObject
@@ -37,6 +38,11 @@ typedef void(^SDBWriteChangesDone)(NSError* error);
 - (void)putAttributes:(NSString*)domain item:(NSString*)item
               changes:(SDBChangeSet*)changeSet
              whenDone:(SDBWriteChangesDone)block;
+
+// Delete
+- (void)deleteAllAttributes:(NSString*)domain item:(NSString*)item
+                whenDone:(SDBDeleteItemDone)block;
+
 @end
 
 @interface SDBChangeSet : NSObject
